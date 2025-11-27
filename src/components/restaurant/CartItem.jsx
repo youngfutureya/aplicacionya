@@ -2,15 +2,12 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-// Importamos el hook y los colores
 import { useCart } from '../../context/CartContext';
 import { COLORS } from '../../utils/constants';
 
 const CartItem = ({ item }) => {
-  // Obtenemos la función para actualizar la cantidad
   const { updateQuantity } = useCart();
   
-  // Calcula el subtotal para este ítem
   const itemSubtotal = item.price * item.quantity;
 
   return (
@@ -18,30 +15,34 @@ const CartItem = ({ item }) => {
       <View style={styles.infoContainer}>
         <Text style={styles.name}>{item.name}</Text>
         <Text style={styles.price}>${item.price.toFixed(2)} c/u</Text>
+        
+        {/* Muestra la nota/especificación si existe */}
+        {item.notes && (
+          <Text style={styles.notesText}>
+            Especif.: {item.notes} 📝
+          </Text>
+        )}
       </View>
 
       <View style={styles.controlsContainer}>
-        {/* Botón para restar cantidad */}
+        {/* Usamos item.notes como tercer argumento para identificar el ítem único */}
         <TouchableOpacity 
           style={styles.quantityButton}
-          onPress={() => updateQuantity(item.productId, -1)}
+          onPress={() => updateQuantity(item.productId, -1, item.notes)}
         >
           <Text style={styles.buttonText}>-</Text>
         </TouchableOpacity>
         
-        {/* Contador de Cantidad */}
         <Text style={styles.quantityText}>{item.quantity}</Text>
 
-        {/* Botón para sumar cantidad */}
         <TouchableOpacity 
           style={styles.quantityButton}
-          onPress={() => updateQuantity(item.productId, 1)}
+          onPress={() => updateQuantity(item.productId, 1, item.notes)}
         >
           <Text style={styles.buttonText}>+</Text>
         </TouchableOpacity>
       </View>
       
-      {/* Muestra el subtotal del ítem */}
       <Text style={styles.subtotalText}>${itemSubtotal.toFixed(2)}</Text>
     </View>
   );
@@ -73,6 +74,13 @@ const styles = StyleSheet.create({
     color: COLORS.secondaryText,
     marginTop: 2,
   },
+  // Estilo para la nota
+  notesText: {
+    fontSize: 12,
+    color: COLORS.primary,
+    fontStyle: 'italic',
+    marginTop: 3,
+  },
   controlsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -101,7 +109,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: COLORS.accent,
-    minWidth: 70, // Para que el texto no baile al cambiar
+    minWidth: 70, 
     textAlign: 'right',
   },
 });

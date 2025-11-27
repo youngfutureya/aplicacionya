@@ -94,9 +94,7 @@ const MenuScreen = ({ navigation, route }) => {
   
   return (
     <View style={styles.container}>
-      <Text style={styles.headerTitle}>Menú</Text>
-      <Text style={styles.subtitle}>Mesa #{tableId}</Text>
-
+     
       <FlatList
         data={products}
         renderItem={renderItem}

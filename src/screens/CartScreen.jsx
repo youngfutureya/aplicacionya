@@ -63,7 +63,7 @@ const CartScreen = ({ navigation, route }) => {
   if (cartItems.length === 0) {
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>Tu carrito está vacío 😔</Text>
+        <Text style={styles.emptyText}>Tu carrito está vacío </Text>
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => navigation.goBack()}

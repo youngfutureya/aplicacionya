@@ -1,55 +1,60 @@
-// Archivo: src/context/CartContext.jsx
+// Archivo: src/context/CartContext.js (CÓDIGO COMPLETO)
 
-import React, { createContext, useState, useContext, useMemo } from 'react';
+import React, { createContext, useContext, useState, useMemo } from 'react';
 
-// 1. Crear el Contexto
-export const CartContext = createContext();
+const CartContext = createContext();
 
-// 2. Crear el Proveedor (Provider) que envuelve a la app
 export const CartProvider = ({ children }) => {
-  // Estado que guarda los productos: [{ productId: 'p1', name: '...', price: 120, quantity: 1 }]
+  // El carrito guardará objetos con { productId, name, price, quantity, notes }
   const [cartItems, setCartItems] = useState([]);
 
-  // Función para añadir o aumentar la cantidad de un producto
-  const addToCart = (product) => {
-    setCartItems(prevItems => {
-      // Buscar si el producto ya existe
-      const existingItem = prevItems.find(item => item.productId === product.id);
+  // Función para agregar un producto al carrito
+  const addItem = (product, initialQuantity = 1, notes = '') => {
+    setCartItems(currentItems => {
+      // 1. Verificar si el ítem (incluyendo la nota) ya existe
+      const existingItemIndex = currentItems.findIndex(
+        // Un ítem es igual solo si el producto es el mismo Y la nota es la misma
+        item => item.productId === product.id && item.notes === notes
+      );
 
-      if (existingItem) {
-        // Si existe, aumentamos la cantidad
-        return prevItems.map(item =>
-          item.productId === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
+      if (existingItemIndex > -1) {
+        // Si ya existe con la MISMA NOTA, crea una copia y actualiza la cantidad
+        const newItems = [...currentItems];
+        newItems[existingItemIndex].quantity += initialQuantity;
+        return newItems;
       } else {
-        // Si no existe, lo agregamos con cantidad 1
-        return [...prevItems, { productId: product.id, name: product.name, price: product.price, quantity: 1 }];
+        // Si es un ítem nuevo (o si tiene una nota diferente)
+        const newItem = {
+          productId: product.id,
+          name: product.name,
+          price: product.price,
+          quantity: initialQuantity,
+          notes: notes, // <--- GUARDAMOS LA NOTA
+        };
+        return [...currentItems, newItem];
       }
     });
   };
 
-  // Función para reducir la cantidad o eliminar el producto
-  const updateQuantity = (productId, amount) => {
-    setCartItems(prevItems => {
-      const existingItem = prevItems.find(item => item.productId === productId);
+  // Función para modificar la cantidad de un ítem existente
+  // Recibe la nota para identificar el ítem único
+  const updateQuantity = (productId, change, notes = '') => {
+    setCartItems(currentItems => {
+      // 1. Encuentra el ítem por ID y nota
+      const index = currentItems.findIndex(
+        item => item.productId === productId && item.notes === notes
+      );
+      
+      if (index === -1) return currentItems;
 
-      if (!existingItem) return prevItems;
+      const newItems = [...currentItems];
+      newItems[index].quantity += change;
 
-      const newQuantity = existingItem.quantity + amount;
-
-      if (newQuantity <= 0) {
-        // Eliminar si la cantidad es cero o negativa
-        return prevItems.filter(item => item.productId !== productId);
-      } else {
-        // Actualizar la cantidad
-        return prevItems.map(item =>
-          item.productId === productId
-            ? { ...item, quantity: newQuantity }
-            : item
-        );
+      if (newItems[index].quantity <= 0) {
+        // Si la cantidad es cero o menos, eliminamos el ítem
+        newItems.splice(index, 1);
       }
+      return newItems;
     });
   };
   
@@ -58,30 +63,25 @@ export const CartProvider = ({ children }) => {
     setCartItems([]);
   };
 
-  // Cálculos esenciales (se recalculan solo si cartItems cambia)
-  const cartTotals = useMemo(() => {
+  // Cálculo del total y del número total de ítems (usando useMemo para optimizar)
+  const { total, totalItems } = useMemo(() => {
     const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
     return { total, totalItems };
   }, [cartItems]);
 
-  // 3. Valores que se exportan para que cualquier componente los use
-  const contextValue = {
+  const value = {
     cartItems,
-    addToCart,
+    addItem,
     updateQuantity,
     clearCart,
-    ...cartTotals,
+    total,
+    totalItems,
   };
 
-  return (
-    <CartContext.Provider value={contextValue}>
-      {children}
-    </CartContext.Provider>
-  );
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };
 
-// 4. Hook personalizado para usar el carrito fácilmente
 export const useCart = () => {
   return useContext(CartContext);
 };
