@@ -10,16 +10,17 @@ export const getProducts = async (restaurantId, tableId) => {
       }
     });
     
-    // === AQUÍ ESTÁ LA MAGIA DE LA TRADUCCIÓN ===
-    // Convertimos lo que llega del Backend al formato que usa la App
     const rawData = response.data;
 
+    // CORRECCIÓN: Usamos las mismas llaves que usan tus componentes (MenuScreen y ProductCard)
     const adaptedData = rawData.map(item => ({
-      id: item.id_producto,           // id_producto -> id
-      name: item.nombre,              // nombre -> name
-      description: item.descripcion,  // descripcion -> description
-      price: parseFloat(item.precio_venta), // Aseguramos que sea número
-      // Si tuvieras imagen en BD: imageUrl: item.imagen || 'placeholder.png'
+      id: item.id_producto,           
+      nombre: item.nombre,            // Mantenemos "nombre" (no "name")
+      descripcion: item.descripcion,  // Mantenemos "descripcion" (no "description")
+      precio: parseFloat(item.precio_venta), // Mantenemos "precio"
+      imagen: item.imagen,
+      // AGREGADO IMPORTANTÍSIMO: Necesitamos la categoría para las secciones
+      categoria: item.categoria || item.nombre_categoria || 'General' 
     }));
 
     return adaptedData; 

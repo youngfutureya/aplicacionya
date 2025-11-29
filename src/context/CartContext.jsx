@@ -1,46 +1,44 @@
-// Archivo: src/context/CartContext.js (CÓDIGO COMPLETO)
-
 import React, { createContext, useContext, useState, useMemo } from 'react';
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  // El carrito guardará objetos con { productId, name, price, quantity, notes }
   const [cartItems, setCartItems] = useState([]);
 
-  // Función para agregar un producto al carrito
-  const addItem = (product, initialQuantity = 1, notes = '') => {
+  // CORRECCIÓN: Renombramos 'addItem' a 'addToCart' para que coincida con ProductCard
+  const addToCart = (product, initialQuantity = 1, notes = '') => {
     setCartItems(currentItems => {
       // 1. Verificar si el ítem (incluyendo la nota) ya existe
+      // Nota: Asegúrate que product.id existe (viene del adaptador de products.js)
+      const productId = product.id || product.id_producto; 
+
       const existingItemIndex = currentItems.findIndex(
-        // Un ítem es igual solo si el producto es el mismo Y la nota es la misma
-        item => item.productId === product.id && item.notes === notes
+        item => item.productId === productId && item.notes === notes
       );
 
       if (existingItemIndex > -1) {
-        // Si ya existe con la MISMA NOTA, crea una copia y actualiza la cantidad
+        // Si ya existe con la MISMA NOTA, actualizamos la cantidad
         const newItems = [...currentItems];
         newItems[existingItemIndex].quantity += initialQuantity;
         return newItems;
       } else {
-        // Si es un ítem nuevo (o si tiene una nota diferente)
+        // Si es nuevo
         const newItem = {
-          productId: product.id,
-          name: product.name,
-          price: product.price,
+          productId: productId,
+          name: product.name || product.nombre, // Soporte para ambos nombres por si acaso
+          price: product.price || product.precio,
           quantity: initialQuantity,
-          notes: notes, // <--- GUARDAMOS LA NOTA
+          notes: notes,
+          // Guardamos la imagen también para que se vea bonita en el carrito
+          image: product.imagen 
         };
         return [...currentItems, newItem];
       }
     });
   };
 
-  // Función para modificar la cantidad de un ítem existente
-  // Recibe la nota para identificar el ítem único
   const updateQuantity = (productId, change, notes = '') => {
     setCartItems(currentItems => {
-      // 1. Encuentra el ítem por ID y nota
       const index = currentItems.findIndex(
         item => item.productId === productId && item.notes === notes
       );
@@ -51,19 +49,16 @@ export const CartProvider = ({ children }) => {
       newItems[index].quantity += change;
 
       if (newItems[index].quantity <= 0) {
-        // Si la cantidad es cero o menos, eliminamos el ítem
         newItems.splice(index, 1);
       }
       return newItems;
     });
   };
   
-  // Función para vaciar el carrito
   const clearCart = () => {
     setCartItems([]);
   };
 
-  // Cálculo del total y del número total de ítems (usando useMemo para optimizar)
   const { total, totalItems } = useMemo(() => {
     const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -72,7 +67,7 @@ export const CartProvider = ({ children }) => {
 
   const value = {
     cartItems,
-    addItem,
+    addToCart, // <--- Ahora exportamos addToCart
     updateQuantity,
     clearCart,
     total,
