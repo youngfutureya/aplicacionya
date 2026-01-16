@@ -13,6 +13,7 @@ export const CartProvider = ({ children }) => {
   const [tableId, setTableId] = useState(null);
 
   // === MAGIA DE AUTO-EXPULSIÓN ===
+  // Verifica periódicamente si la sesión sigue activa en el servidor
   useEffect(() => {
     let interval;
     if (pin) {
@@ -43,6 +44,7 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = (product, quantity = 1, notes = '') => {
     setCartItems(prev => {
+      // Normalización de ID: prioridad a id_producto
       const productId = product.id_producto || product.id;
       const precio = parseFloat(product.precio_venta || product.precio || 0);
       
@@ -73,7 +75,7 @@ export const CartProvider = ({ children }) => {
   const updateQuantity = (productId, change, notes) => {
     setCartItems(prev => {
       return prev.map(item => {
-        // Identificamos por ID y por Notas
+        // Identificamos por ID y por Notas para no afectar otros items iguales pero con notas distintas
         if ((item.id_producto || item.id) === productId && item.notes === notes) {
             const newQuantity = item.quantity + change;
             return newQuantity > 0 ? { ...item, quantity: newQuantity } : item;
